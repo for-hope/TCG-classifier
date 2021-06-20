@@ -1,0 +1,23 @@
+# ignore all images except one in every dataset folder.
+*.jpg
+*.png
+!1111.jpg
+!600.jpg
+!340002.jpg
+!100000.jpg
+
+### project ###
+apis/
+data.old/
+test_images/
+image_extractor.py
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+.cache
+
+### VisualStudioCode ###
+.vscode/*
+*.code-workspace
