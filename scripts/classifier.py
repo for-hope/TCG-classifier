@@ -25,13 +25,14 @@ img_height = 310
 
 
 start = "save"
-
+dir = 'test_images\mtg'
+model_path = 'models\model-5-1624194872.8838975'
 
 if start == "load":
-    model_path = 'models\model-5-1624194872.8838975'
+    
     model = keras.models.load_model(model_path)
     # ? switch this to MTG dir or YGO idr
-    dir = 'test_images\mtg'
+    
     for img in os.listdir(dir):
         img = os.path.join(dir, img)
         # convert BGR to RGB format
