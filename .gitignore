@@ -21,3 +21,5 @@ __pycache__/
 ### VisualStudioCode ###
 .vscode/*
 *.code-workspace
+scripts/scan_cmd.py
+scripts/transform_example.py

@@ -1,3 +1,4 @@
+from scanner import detect_image
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -13,32 +14,46 @@ import tensorflow as tf
 import cv2
 import os
 import time
-
+from PIL import Image
+import scanner
 import numpy as np
-
+import imutils
 print("Starting classifier...")
 
+
 execution_path = os.getcwd()
-labels = ['ygo', 'mtg']
+labels = ['ygo', 'mtg', 'poki']
 img_width = 223
 img_height = 310
+cropped_size = 6
 
-
-start = "save"
-dir = 'test_images\mtg'
-model_path = 'models\model-5-1624194872.8838975'
+start = "load"
+# dir = 'test_images\mtg'
+model_path = 'models\model-5-1625169312.1249607'
 
 if start == "load":
-    
+
     model = keras.models.load_model(model_path)
     # ? switch this to MTG dir or YGO idr
-    
+    dir = 'test_images\mtg'
     for img in os.listdir(dir):
         img = os.path.join(dir, img)
         # convert BGR to RGB format
         img_arr = cv2.imread(img)
+        full_image = img_arr
+        try:
+            img_arr, full_image = detect_image(img)
+            
+        except:
+            print("Error")
+
+        #cv2.imshow("Scanned", imutils.resize(img_arr, height = 650))
         # Reshaping images to preferred size
         resized_arr = cv2.resize(img_arr, (img_width, img_height))
+        #cv2.putText(frame, class_names[cls], (xy[0], xy[1] - baseline), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), 1) 
+
+
+        #! change this to the cropped images and need to detect images as well
         x_val = [resized_arr]
         x_val = np.array(x_val) / 255
         x_val.reshape(-1, img_width, img_height, 1)
@@ -46,6 +61,10 @@ if start == "load":
         print("################################")
         print(f"The result for {img} is {labels[prediction[0]]}")
         print("################################")
+        resized_arr = cv2.putText(full_image, labels[prediction[0]], (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 1)
+        cv2.imshow("Detected", resized_arr)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     exit()
 
 
@@ -59,8 +78,21 @@ def get_data(data_dir):
             try:
                 # convert BGR to RGB format
                 img_arr = cv2.imread(os.path.join(path, img))[..., ::-1]
-                # Reshaping images to preferred size
                 resized_arr = cv2.resize(img_arr, (img_width, img_height))
+                image = Image.fromarray(resized_arr)
+                box = (cropped_size, cropped_size, img_width -
+                       cropped_size, img_height-cropped_size)
+                cropped_image = image.crop(box)
+                # Reshaping images to preferred size
+
+                cropped_image = np.array(cropped_image)
+                # x = 30
+                # y = 30
+                resized_arr = cv2.resize(
+                    cropped_image, (img_width, img_height))
+                #!  img[int(y):int(y+h), int(x):int(x+w)]
+                #resized_arr = resized_arr[int(y):int(y+img_height), int(x):int(x+img_width)]
+                # plt.show()
                 data.append([resized_arr, class_num])
             except Exception as e:
                 print(e)
@@ -75,8 +107,11 @@ l = []
 for i in train:
     if(i[1] == 0):
         l.append("mtg")
-    else:
+    elif i[1] == 1:
         l.append("ygo")
+    else:
+        l.append("poki")
+
 print("L length is : " + str(len(l)))
 
 sns.set_style('darkgrid')
@@ -121,21 +156,24 @@ x_val.reshape(-1, img_width, img_height, 1)
 y_val = np.array(y_val)
 
 
+#! need more intense image augmentation
 datagen = ImageDataGenerator(
+    brightness_range=[0.8,1.0],
     featurewise_center=False,  # set input mean to 0 over the dataset
     samplewise_center=False,  # set each sample mean to 0
     featurewise_std_normalization=False,  # divide inputs by std of the dataset
     samplewise_std_normalization=False,  # divide each input by its std
     zca_whitening=False,  # apply ZCA whitening
     # randomly rotate images in the range (degrees, 0 to 180)
-    rotation_range=30,
-    zoom_range=0.2,  # Randomly zoom image
+    rotation_range=50,
+    zoom_range=0.3, #0.2  # Randomly zoom image
     # randomly shift images horizontally (fraction of total width)
-    width_shift_range=0.1,
+    width_shift_range=0.4,
+    
     # randomly shift images vertically (fraction of total height)
-    height_shift_range=0.1,
+    height_shift_range=0.4,
     horizontal_flip=True,  # randomly flip images
-    vertical_flip=False)  # randomly flip images
+    vertical_flip=True)  # randomly flip images
 
 
 datagen.fit(x_train)
@@ -157,11 +195,11 @@ model.add(Dropout(0.4))
 
 model.add(Flatten())
 model.add(Dense(128, activation="relu"))
-model.add(Dense(2, activation="softmax"))
+model.add(Dense(3, activation="softmax"))
 
 model.summary()
 
-opt = Adam(lr=0.000001)
+opt = Adam(lr=0.00001)
 n_epochs = 5
 model.compile(optimizer=opt, loss=tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True), metrics=['accuracy'])
@@ -194,7 +232,11 @@ plt.show()
 #predictions = model.predict_classes(x_val)
 predictions = np.argmax(model.predict(x_val), axis=-1)
 predictions = predictions.reshape(1, -1)[0]
+
+
 print(classification_report(y_val, predictions,
-      target_names=['MTG (Class 0)', 'YGO (Class 1)']))
+      target_names=['MTG (Class 0)', 'YGO (Class 1)', 'Poki (Class 2)']))
+
 
 model.save('models/model-' + str(n_epochs) + '-' + str(time.time()))
+print("Saved model as " + str(n_epochs) + '-' + str(time.time()))
