@@ -1,6 +1,14 @@
 # TCG Cards Classifier
+![image](https://user-images.githubusercontent.com/23053435/184536825-89cb57f2-ee41-40b2-81df-416cb87aa01c.png)
 
+
+## Overview
 TCG-Classifier is a Python library for classifying Card images of the Trading Card Games YuGiOh, Magic The Gathering and Pokemon TCG.
+
+You can view the full approach on [this paper](https://drive.google.com/file/d/15SQoF9Ar1pnvECk0twOfrr1_9sND3Wak/view?usp=sharing).
+
+![image](https://user-images.githubusercontent.com/23053435/184536708-2fcdd7db-4ec2-4f91-bf97-7c9a2c0b6b16.png)
+![image](https://user-images.githubusercontent.com/23053435/184536725-a8796573-a2ff-48e8-9630-aa8c749b4a37.png)
 
 ## Installation
 
